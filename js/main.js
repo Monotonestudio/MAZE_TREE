@@ -10,7 +10,7 @@ var startAngle;
 var seed;
 var pointOnEdge;
 
-var da = 0.; // Angle delta
+var da = 0.2; // Angle delta
 var dl = 0.87; // Length delta (factor)
 var ar = 2.; // Randomness
 var maxDepth = 5;
@@ -135,7 +135,11 @@ function create() {
 		.style('stroke', "rgba(0,0,0,0.5)")
 		.attr('id', function(d) {return 'id-'+d.i;})
 		.on('mouseover', highlightParents)
-		.on('mouseout', highlightParents);
+		.on('mouseout', highlightParents)
+		.on('click',function(d) {
+			d3.select('#id-'+parseInt(d.i)).style('stroke', "pink");
+			console.log("hallo hallo ! " + d.i);
+		} );
 
 	d3.select('svg')
 		.selectAll('circle')
@@ -188,7 +192,7 @@ function init() {
     context,
     [
       'BowieMono.wav',
-      'DinosaursBadDay.aiff',
+      '3_overtones.mp3'
     ],
     finishedLoading
     );
