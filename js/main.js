@@ -115,6 +115,17 @@ function highlightParents(d) {
 	var colour = d3.event.type === 'mouseover' ? 'green' : "rgba(0,0,0,0.5)";
 	var depth = d.d;
 	for(var i = 0; i <= depth; i++) {
+
+		d3.select('#id-'+parseInt(d.i)).style('stroke', colour);
+		d = branches[d.parent];
+	}	
+}
+
+function highlightParents(d) {
+	var colour = d3.event.type === 'mouseover' ? 'green' : "rgba(0,0,0,0.5)";
+	var depth = d.d;
+	for(var i = 0; i <= depth; i++) {
+		
 		d3.select('#id-'+parseInt(d.i)).style('stroke', colour);
 		d = branches[d.parent];
 	}	
