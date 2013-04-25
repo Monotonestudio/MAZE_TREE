@@ -118,17 +118,7 @@ function highlightParents(d) {
 
 		d3.select('#id-'+parseInt(d.i)).style('stroke', colour);
 		d = branches[d.parent];
-	}	
-}
-
-function highlightParents(d) {
-	var colour = d3.event.type === 'mouseover' ? 'green' : "rgba(0,0,0,0.5)";
-	var depth = d.d;
-	for(var i = 0; i <= depth; i++) {
-		
-		d3.select('#id-'+parseInt(d.i)).style('stroke', colour);
-		d = branches[d.parent];
-	}	
+	}
 }
 
 function create() {
@@ -164,6 +154,7 @@ function update() {
 		.selectAll('line')
 		.data(branches)
 		.transition()
+		.duration(1000)
 		.attr('x1', x1)
 		.attr('y1', y1)
 		.attr('x2', x2)
@@ -173,6 +164,7 @@ function update() {
 		.selectAll('circle')
 		.data(branches)
 		.transition()
+		.duration(1000)
 		.attr('cx',x1)
 		.attr('cy',y1)
 		.attr('r',10)
