@@ -1,8 +1,8 @@
 // Tree configuration
 var branches = [];
 
-var w = 1024;
-var h = 800;
+var w = 800;
+var h = 600;
 
 var centre = { x: (w/2.0), y: (h/2.0) }
 
@@ -10,15 +10,13 @@ var startAngle;
 var seed;
 var pointOnEdge;
 
-var da = 0.2; // Angle delta
-var dl = 0.87; // Length delta (factor)
-var ar = 2.; // Randomness
+var da = 0.45; // Angle delta
+var dl = 1.; // Length delta (factor)
+var ar = 3.60; // Randomness
 var maxDepth = 5;
-var branchLength = 200;
+var branchLength = 100;
 
 var branchWidth = "10px";
-
-resetSeed();
 
 function calculateAngle(x1,y1,x2,y2) { // calculate angle between two points
 	var deltaX = x2 - x1;
@@ -29,7 +27,8 @@ function calculateAngle(x1,y1,x2,y2) { // calculate angle between two points
 function resetSeed() { // reset seed
 	pointOnEdge = randomPointOnEdge();
 	startAngle = calculateAngle(pointOnEdge.x,pointOnEdge.y,centre.x,centre.y);
-	seed = {i: 0, x: pointOnEdge.x, y: h - pointOnEdge.y, a: startAngle, l: branchLength, d:0};
+  	var newAudioNode = new AudioNode(context);
+	seed = {i: 0, x: pointOnEdge.x, y: h - pointOnEdge.y, a: startAngle, l: branchLength, d:0, audioNode:newAudioNode};
 }
 
 function randomPointOnEdge() { // only generates points on the  rectangular edge of the canvas
@@ -73,22 +72,26 @@ function branch(b) {
 		a: b.a - da + daR,
 		l: b.l * dl ,
 		d: b.d + 1,
-		parent: b.i
+		parent: b.i,
+		audioNode: new AudioNode(context)
 	};
+	
 	branch(newB);
 
 	// Right branch
-		daR = ar * Math.random() - ar * 0.5;
-		newB = {
-			i: branches.length,
-			x: end.x, 
-			y: end.y, 
-			a: b.a + da + daR, 
-			l: b.l * dl, 
-			d: b.d + 1,
-			parent: b.i
-		};
-		branch(newB);
+	daR = ar * Math.random() - ar * 0.5;
+	newB = {
+		i: branches.length,
+		x: end.x, 
+		y: end.y, 
+		a: b.a + da + daR, 
+		l: b.l * dl, 
+		d: b.d + 1,
+		parent: b.i,
+		audioNode: new AudioNode(context)
+	};
+	
+	branch(newB);
 }
 
 function regenerate(initialise) {
@@ -137,8 +140,7 @@ function create() {
 		.on('mouseover', highlightParents)
 		.on('mouseout', highlightParents)
 		.on('click',function(d) {
-			d3.select('#id-'+parseInt(d.i)).style('stroke', "pink");
-			console.log("hallo hallo ! " + d.i);
+			d.audioNode.playBuffer();
 		} );
 
 	d3.select('svg')
@@ -150,7 +152,6 @@ function create() {
 		.attr('cy',y1)
 		.attr('r',10)
 		.attr('stroke',"rgba(0,0,0,0.5")
-		//.attr('id', function(d) {return 'id-'+d.i;});
 }
 
 function update() {
@@ -179,11 +180,12 @@ function update() {
 d3.selectAll('.regenerate')
 	.on('click', regenerate);
 
-regenerate(true);
+d3.selectAll('.stopAllBuffers')
+	.on('click', stopAllBuffers);
 
-window.onload = init;
-var context;
-var bufferLoader;
+function stopAllBuffers() {
+	console.log("to be implemented, sorry");
+}
 
 function init() {
   context = new webkitAudioContext();
@@ -201,16 +203,12 @@ function init() {
 }
 
 function finishedLoading(bufferList) {
-  // Create two sources and play them both together.
-  var source1 = context.createBufferSource();
-  var source2 = context.createBufferSource();
-  source1.buffer = bufferList[0];
-  source2.buffer = bufferList[1];
 
-  source1.connect(context.destination);
-  source2.connect(context.destination);
-  source1.noteOn(0);
-  source2.noteOn(0);
+	bufferProvider = new BufferProvider(bufferList);
+	console.log(" bufferProvidercount " + bufferProvider.totalNumberOfBuffers);
+
+	resetSeed();
+	regenerate(true);
 }
 
 function BufferLoader(context, urlList, callback) {
@@ -256,3 +254,46 @@ BufferLoader.prototype.load = function() {
     for (var i = 0; i < this.urlList.length; ++i)
         this.loadBuffer(this.urlList[i], i);
 }
+
+function AudioNode(context) {
+	this.buffer = bufferProvider.provideBuffer();
+	this.context = context;
+	this.source = null;
+}
+
+AudioNode.prototype.playBuffer = function() {
+	this.source = this.context.createBufferSource();
+	this.source.buffer = this.buffer;
+	this.source.connect(context.destination)
+	this.source.noteOn(0); 
+}
+
+AudioNode.prototype.stop = function() {
+	if(this.source) {
+		this.source.noteOff(0);
+	} else {
+		console.log("already disappeared...");
+	}
+}
+
+function BufferProvider(bufferlist) { // this takes care of providing a buffer to every AudioNode
+	this.providerBufferList = bufferlist;
+	this.count = 0;
+	
+	this.totalNumberOfBuffers = bufferlist.length;
+}
+
+BufferProvider.prototype.provideBuffer = function () {
+	var current = this.count;
+	this.count = (this.count + 1) % this.totalNumberOfBuffers;
+	return this.providerBufferList[current];
+}
+
+var context;
+var bufferLoader;
+var bufferProvider;
+
+window.onload = init;
+
+
+
