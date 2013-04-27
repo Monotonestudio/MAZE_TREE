@@ -12,7 +12,7 @@ var pointOnEdge;
 
 var da = 0.45; // Angle delta
 var dl = 1.; // Length delta (factor)
-var ar = 3.60; // Randomness
+var ar = 0; // Randomness
 var maxDepth = 5;
 var branchLength = 100;
 
@@ -194,7 +194,7 @@ function init() {
     context,
     [
       'BowieMono.wav',
-      '3_overtones.mp3'
+      'DinosaursBadDay.aiff'
     ],
     finishedLoading
     );
@@ -262,17 +262,35 @@ function AudioNode(context) {
 }
 
 AudioNode.prototype.playBuffer = function() {
+	if (this.source) {
+		this.source.noteOff(0); // release any playing nodes
+	}
 	this.source = this.context.createBufferSource();
-	this.source.buffer = this.buffer;
-	this.source.connect(context.destination)
-	this.source.noteOn(0); 
+	this.source.buffer = this.buffer; // assign buffer
+
+	var gainer = context.createGainNode(); // create a gain node
+	gainer.gain.value = 0.1; 
+
+	this.source.connect(gainer);
+	gainer.connect(context.destination); // source -> gain -> output
+	
+	this.source.loop = true; // loop
+	var randomDuration = Math.random() * 1; 
+	var randomOffset = Math.random() * 1;
+	this.source.noteGrainOn(0,randomOffset,randomDuration); // start playing now, with offset and random duration
 }
 
 AudioNode.prototype.stop = function() {
 	if(this.source) {
 		this.source.noteOff(0);
-	} else {
-		console.log("already disappeared...");
+	} 
+}
+
+function stopAllBuffers() {
+	var i;
+	var amount = branches.length;
+	for (i=0 ; i<amount ; i++) {
+		branches[i].audioNode.stop();
 	}
 }
 
