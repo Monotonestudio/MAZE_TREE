@@ -207,7 +207,8 @@ function init() {
     context,
     [
       'BowieMono.wav',
-      'DinosaursBadDay.aiff'
+      '3_overtones.mp3',
+      'Chic_will you cry.mp3'
     ],
     finishedLoading
     );
@@ -249,10 +250,12 @@ BufferLoader.prototype.loadBuffer = function(url, index) {
                     alert('error decoding file data: ' + url);
                     return;
                 }
+                console.log(buffer);
                 loader.bufferList[index] = buffer;
                 if (++loader.loadCount == loader.urlList.length)
                     loader.onload(loader.bufferList);
-            }    
+            },function(error) { console.error ('decodeAudioData error', error);
+        	}    
         );
     }
 
