@@ -207,8 +207,11 @@ function init() {
     context,
     [
       'BowieMono.wav',
-      '3_overtones.mp3',
-      'Chic_will you cry.mp3'
+      'Chic_will you cry.mp3',
+      'sound1.mp3',
+      'sound2.mp3',
+      'sound3.mp3',
+      'sound4.mp3',
     ],
     finishedLoading
     );
@@ -341,7 +344,7 @@ TreeSchedular.prototype.schedule = function () {
 	if (this.currentBranch) { // if there is a parent, schedule next playing'
 		setTimeout(function() {
 			treeSchedular.schedule();
-		} , 100.0);
+		} , 500.0);
 	}
 }
 
