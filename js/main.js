@@ -13,7 +13,7 @@ var pointOnEdge;
 var da = 0.45; // Angle delta
 var dl = 1.; // Length delta (factor)
 var ar = 0; // Randomness
-var maxDepth = 5;
+var maxDepth = 7;
 var branchLength = 100;
 
 var branchWidth = "10px";
@@ -114,6 +114,7 @@ function x1(d) {return d.x;}
 function y1(d) {return d.y;}
 function x2(d) {return endPt(d).x;}
 function y2(d) {return endPt(d).y;}
+
 function highlightParents(d) {
 	var colour = d3.event.type === 'mouseover' ? 'green' : "rgba(0,0,0,0.5)";
 	var depth = d.d;
@@ -121,7 +122,19 @@ function highlightParents(d) {
 
 		d3.select('#id-'+parseInt(d.i)).style('stroke', colour);
 		d = branches[d.parent];
-	}
+	} 
+}
+
+function highlightAndPlayParents(d) {
+	var endBranch = d;
+	var depth = d.d;
+	for(var i = 0; i <= depth; i++) {
+
+		d3.select('#id-'+parseInt(d.i)).style('stroke', 'red');
+		d = branches[d.parent];
+	} 
+	treeSchedular.currentBranch = endBranch;
+	treeSchedular.schedule();
 }
 
 function create() {
@@ -140,7 +153,7 @@ function create() {
 		.on('mouseover', highlightParents)
 		.on('mouseout', highlightParents)
 		.on('click',function(d) {
-			d.audioNode.playBuffer();
+			highlightAndPlayParents(d);
 		} );
 
 	d3.select('svg')
@@ -275,8 +288,8 @@ AudioNode.prototype.playBuffer = function() {
 	gainer.connect(context.destination); // source -> gain -> output
 	
 	this.source.loop = true; // loop
-	var randomDuration = Math.random() * 1; 
-	var randomOffset = Math.random() * 1;
+	var randomDuration = (Math.random() * 0.1) + 0.02; 
+	var randomOffset = Math.random() * 4;
 	this.source.noteGrainOn(0,randomOffset,randomDuration); // start playing now, with offset and random duration
 }
 
@@ -306,6 +319,32 @@ BufferProvider.prototype.provideBuffer = function () {
 	this.count = (this.count + 1) % this.totalNumberOfBuffers;
 	return this.providerBufferList[current];
 }
+
+function TreeSchedular () {
+	this.currentBranch = null;
+	this.previousBranch = null;
+}
+
+TreeSchedular.prototype.schedule = function () {
+	console.log("this.currentbranch =" + this.currentBranch);
+
+	if (this.previousBranch) {
+		this.previousBranch.audioNode.stop();
+	};
+	this.currentBranch.audioNode.playBuffer();
+
+	this.previousBranch = this.currentBranch;
+	this.currentBranch = branches[this.currentBranch.parent]; // assign the parrent as current branch
+	console.log("this.parent ? = "+ this.currentBranch);
+
+	if (this.currentBranch) { // if there is a parent, schedule next playing'
+		setTimeout(function() {
+			treeSchedular.schedule();
+		} , 100.0);
+	}
+}
+
+var treeSchedular = new TreeSchedular();
 
 var context;
 var bufferLoader;
